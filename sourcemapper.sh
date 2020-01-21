@@ -13,7 +13,12 @@ URLNOMAP=$(echo $URL | rev | cut -d '/' -f2- | rev)
 
 # check if url is sourcemap or js
 if [ $(echo $URL | rev | awk -F'.' '{print $1}' | rev) != 'map' ]; then
+  # If not .map check for a sourcemap reference
   MAPFILE=$(curl -s $URL | grep sourceMapping | sed -e 's/.*sourceMappingURL=\([[:alnum:][:punct:]]*\)/\1/')
+  if [ -z $MAPFILE ]; then
+    echo "No sourcemap referenced in $URL"
+    exit 1
+  fi
   URL="$URLNOMAP/$MAPFILE"
   echo "Found reference to $URL"
 fi
