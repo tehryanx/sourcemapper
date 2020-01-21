@@ -1,9 +1,16 @@
-# sourcemapper
+# Sourcemapper
 Reconstruct javascript from a sourcemap in bash
 
 Sourcemaps are used to help developers debug minified javascript. If a sourcemap is provided, the minified js will be served to visitors, but the browsers debugger will be able to access the original unminified code. Sourcemapper enables you to download the original, unminified javascript source tree from the commandline so that you don't have to analyze it with the in-browser debugger. 
 
-If you find that files contain just the phrase: "Not Found" that means that the files were listed in the sourcemap, but not actually avaialble. I decided to have the empty files created anyway in case the directory structure itself is valuable information. 
+# Finding sourcemap files
+To find a sourcemap, look at the very end of a minified javascript file. If a sourcemap exists it should be linked there. 
+
+Occasionally the .map file will exist even though the reference isn't in the minified source. You might be able to find it by adding .map to the end of the javascripts filename as in: script.js.map
+
+Finally, if there are no sourcemaps available on production servers, check development and staging servers.
+
+*If you find that files contain just the phrase: "Not Found" that means that the files were listed in the sourcemap, but not actually avaialble. I decided to have the empty files created anyway in case the directory structure itself is valuable information.*
 
 ```
 $ ./sourcemaps.sh https://github.githubassets.com/assets/github-bootstrap-ce762218.js.map
