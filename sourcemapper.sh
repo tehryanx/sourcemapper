@@ -66,7 +66,7 @@ for ((i=0;i<=LENGTH;i++)); do
 
   # check for source in sourcesContent, otehrwise get directly from the URL.
   DATA=$(echo $CONTENTS | jq .[$i])
-  if [ $DATA == 'null' ]; then
+  if [ "$DATA" == 'null' ]; then
     DATA=$(curl -s "$URLNOMAP/$P/$F")
   fi
 
