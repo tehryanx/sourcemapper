@@ -13,7 +13,7 @@ URLNOMAP=$(echo $URL | rev | cut -d '/' -f2- | rev)
 
 # check if url is sourcemap or js
 if [ $(echo $URL | rev | awk -F'.' '{print $1}' | rev) != 'map' ]; then
-  MAPFILE=$(echo $(curl -s $URL) | sed 's/^.*sourceMappingURL=\([^\s\n$]*\)/\1/')
+  MAPFILE=$(curl -s $URL | grep sourceMapping | sed -e 's/.*sourceMappingURL=\([[:alnum:][:punct:]]*\)/\1/')
   URL="$URLNOMAP/$MAPFILE"
   echo "Found reference to $URL"
 fi
