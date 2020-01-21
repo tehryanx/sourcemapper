@@ -1,24 +1,32 @@
 #!/bin/bash
 
-# check if a sourcemap url has been supplied
+# check if a url has been supplied
 if [ -z "$1" ]; then
   echo "Please supply a sourcemap URL"
   exit 1;
 fi
 
+# store url with sourcemap filename
+URL=$1
+# store url without sourcemap filename
+URLNOMAP=$(echo $URL | rev | cut -d '/' -f2- | rev)
+
+# check if url is sourcemap or js
+if [ $(echo $URL | rev | awk -F'.' '{print $1}' | rev) != 'map' ]; then
+  MAPFILE=$(echo $(curl -s $URL) | sed 's/^.*sourceMappingURL=\([^\s\n$]*\)/\1/')
+  URL="$URLNOMAP/$MAPFILE"
+  echo "Found reference to $URL"
+fi
+
 # check if file exists at all
-RESP=$(curl -s -o /dev/null -w "%{http_code}" $1)
+RESP=$(curl -s -o /dev/null -w "%{http_code}" $URL)
 if [ "$RESP" != '200' ]; then
   echo "Map not found. (HTTP Response Code: $RESP)";
   exit 1;
 fi
 
 # pull contents of the file into $MAP
-MAP=$(curl -s "$1");
-
-# store path without sourcemap filename
-URL=$(echo $1 | rev | cut -d '/' -f2- | rev)
-echo $URL;
+MAP=$(curl -s "$URL");
 
 # is it even valid json?
 echo "$MAP" | jq > /dev/null 2>&1
@@ -34,7 +42,7 @@ if [ "$VER" != '3' ]; then
     echo "the requested sourcemap returned a version of: $VER. Trying anyway."
 fi
 
-echo "Map loaded: read $(echo $MAP | wc -c) bytes from $(echo $1 | rev | awk -F'/' '{print $1}' | rev)."
+echo "Map loaded: read $(echo $MAP | wc -c) bytes from $(echo $URL | rev | awk -F'/' '{print $1}' | rev)."
 
 # get the number of files, the directory structure, and the file contents
 LENGTH=$(echo $MAP | jq '.sources[]' 2> /dev/null | wc -l);
@@ -54,7 +62,7 @@ for ((i=0;i<=LENGTH;i++)); do
   # check for source in sourcesContent, otehrwise get directly from the URL.
   DATA=$(echo $CONTENTS | jq .[$i])
   if [ $DATA == 'null' ]; then
-    DATA=$(curl -s "$URL/$P/$F")
+    DATA=$(curl -s "$URLNOMAP/$P/$F")
   fi
 
   # create directories to match the paths in the map, eliminate ../'s
