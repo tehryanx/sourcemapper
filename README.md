@@ -11,7 +11,7 @@ Occasionally the .map file will exist even though the reference isn't in the min
 Finally, if there are no sourcemaps available on production servers, check development and staging servers.
 
 ### Note:
-*If you find that files contain just the phrase: "Not Found" that means that the files were listed in the sourcemap, but not actually avaialble. I decided to have the empty files created anyway in case the directory structure itself is valuable information.*
+*If you find that files contain just the phrase: "Not Found" or other errors that means that the files were listed in the sourcemap, but not actually accessible. I decided to have the empty files created anyway in case the directory structure itself is valuable information.*
 
 ```
 $ ./sourcemaps.sh https://github.githubassets.com/assets/github-bootstrap-ce762218.js.map
