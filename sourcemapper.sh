@@ -23,6 +23,9 @@ if [ $(echo $URL | rev | awk -F'.' '{print $1}' | rev) != 'map' ]; then
   echo "Found reference to $URL"
 fi
 
+# disable wildcard expansion
+set -f
+
 # check if file exists at all
 RESP=$(curl -s -o /dev/null -w "%{http_code}" $URL)
 if [ "$RESP" != '200' ]; then
