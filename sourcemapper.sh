@@ -3,7 +3,7 @@
 # check if a url has been supplied
 if [ -z "$1" ]; then
   echo "Please supply a sourcemap URL"
-  exit 1;
+  exit 1
 fi
 
 # store url with sourcemap filename
@@ -29,22 +29,22 @@ set -f
 # check if file exists at all
 RESP=$(curl -s -o /dev/null -w "%{http_code}" $URL)
 if [ "$RESP" != '200' ]; then
-  echo "Map not found. (HTTP Response Code: $RESP)";
-  exit 1;
+  echo "Map not found. (HTTP Response Code: $RESP)"
+  exit 1
 fi
 
 # pull contents of the file into $MAP
-MAP=$(curl -s "$URL");
+MAP=$(curl -s "$URL")
 
 # is it even valid json?
 echo "$MAP" | jq > /dev/null 2>&1
 if [ $? != 0 -a $? != 2 ]; then
   echo "Map contains invalid JSON."
-  exit 1;
+  exit 1
 fi
 
 # Version?
-VER=$(echo $MAP | jq '.version' 2> /dev/null);
+VER=$(echo $MAP | jq '.version' 2> /dev/null)
 if [ "$VER" != '3' ]; then
     echo "This tool has only been tested with version 3 of the sourcemap spec."
     echo "the requested sourcemap returned a version of: $VER. Trying anyway."
@@ -53,9 +53,9 @@ fi
 echo "Map loaded: read $(echo $MAP | wc -c) bytes from $(echo $URL | rev | awk -F'/' '{print $1}' | rev)."
 
 # get the number of files, the directory structure, and the file contents
-LENGTH=$(echo $MAP | jq '.sources[]' 2> /dev/null | wc -l);
-CONTENTS=$(echo $MAP | jq '.sourcesContent' 2> /dev/null );
-SOURCES=$(echo $MAP | jq '.sources' 2> /dev/null );
+LENGTH=$(echo $MAP | jq '.sources[]' 2> /dev/null | wc -l)
+CONTENTS=$(echo $MAP | jq '.sourcesContent' 2> /dev/null )
+SOURCES=$(echo $MAP | jq '.sources' 2> /dev/null )
 
 echo "$LENGTH files to be written."
 COUNTER=$LENGTH
@@ -63,9 +63,9 @@ COUNTER=$LENGTH
 for ((i=0;i<=LENGTH;i++)); do
   printf "$COUNTER files remaining."
   # for each file: get the path without the filename, remove ../'s, remove quotes
-  P=$(echo $SOURCES | jq .[$i] | rev | cut -d '/' -f2- | rev | sed 's/\"//g');
+  P=$(echo $SOURCES | jq .[$i] | rev | cut -d '/' -f2- | rev | sed 's/\"//g')
   # get the filename without the path
-  F=$(echo $SOURCES | jq .[$i] | rev | awk -F'/' '{print $1}' | rev | sed 's/\"//g');
+  F=$(echo $SOURCES | jq .[$i] | rev | awk -F'/' '{print $1}' | rev | sed 's/\"//g')
 
   # check for source in sourcesContent, otherwise get directly from the URL.
   DATA=$(echo $CONTENTS | jq .[$i])
@@ -73,14 +73,20 @@ for ((i=0;i<=LENGTH;i++)); do
     DATA=$(curl -s "$URLNOMAP/$P/$F")
   fi
 
-  # create directories to match the paths in the map, eliminate ../'s
-  BASE='./sourcemaps';
-  P=$(echo $P | sed 's/\.\.\///g' )
-  mkdir -p "$BASE/$P";
+  # eliminate ../'s
+  P=$(echo $P | sed 's/\.\.\///g')
 
-  # create the file at that location
-  echo -ne "$(echo $DATA | sed 's/%/%%/g' | cut --complement -c 1 | rev | cut --complement -c 1,2,3 | rev | sed 's/\\"/"/g')" > "$BASE/$P/$F";
-  echo -ne "\rWriting: $BASE/$P/$F\n"
+  BASE='./sourcemaps'
+  DATA=$(echo $DATA | sed 's/%/%%/g' | cut --complement -c 1 | rev | cut --complement -c 1,2,3 | rev | sed 's/\"/"/g')
+
+  if [ "$P" == "$F" ]; then # these files go in the base directory
+    echo -ne $DATA > "$BASE/$F"
+    echo -ne "\rWriting: $BASE/$F\n"
+  else  
+    mkdir -p "$BASE/$P"
+    echo -ne $DATA > "$BASE/$P/$F"
+    echo -ne "\rWriting: $BASE/$P/$F\n"
+  fi
   ((COUNTER=COUNTER-1))
 
 done
