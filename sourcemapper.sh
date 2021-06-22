@@ -67,8 +67,8 @@ for ((i=0;i<=LENGTH;i++)); do
   # get the filename without the path
   F=$(echo $SOURCES | jq .[$i] | rev | awk -F'/' '{print $1}' | rev | sed 's/\"//g');
 
-  # check for source in sourcesContent, otehrwise get directly from the URL.
-  DATA=$(echo $CONTENTS | jq .[$i] | cut --complement -c 1 | rev | cut --complement -c 1,2,3 | rev)
+  # check for source in sourcesContent, otherwise get directly from the URL.
+  DATA=$(echo $CONTENTS | jq .[$i])
   if [ "$DATA" == 'null' ]; then
     DATA=$(curl -s "$URLNOMAP/$P/$F")
   fi
@@ -79,7 +79,7 @@ for ((i=0;i<=LENGTH;i++)); do
   mkdir -p "$BASE/$P";
 
   # create the file at that location
-  echo -ne "$(echo $DATA | sed 's/%/%%/g')\n" > "$BASE/$P/$F";
+  echo -ne "$(echo $DATA | sed 's/%/%%/g' | cut --complement -c 1 | rev | cut --complement -c 1,2,3 | rev | sed 's/\\"/"/g')" > "$BASE/$P/$F";
   echo -ne "\rWriting: $BASE/$P/$F\n"
   ((COUNTER=COUNTER-1))
 
