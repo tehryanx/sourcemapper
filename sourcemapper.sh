@@ -68,7 +68,7 @@ for ((i=0;i<=LENGTH;i++)); do
   F=$(echo $SOURCES | jq .[$i] | rev | awk -F'/' '{print $1}' | rev | sed 's/\"//g');
 
   # check for source in sourcesContent, otehrwise get directly from the URL.
-  DATA=$(echo $CONTENTS | jq .[$i])
+  DATA=$(echo $CONTENTS | jq .[$i] | cut --complement -c 1 | rev | cut --complement -c 1,2,3 | rev)
   if [ "$DATA" == 'null' ]; then
     DATA=$(curl -s "$URLNOMAP/$P/$F")
   fi
